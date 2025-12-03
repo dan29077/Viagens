@@ -4,8 +4,8 @@ import { Layout } from "antd";
 import LayoutMenu from "./components/LayoutMenu";
 import ClientesPage from "./pages/ClientesPage";
 import PacotesPage from "./pages/PacotesPage";
-import ReservasPage from "./pages/ReservasPage";
-import RelatorioPage from "./pages/RelatorioPage";
+//import ReservasPage from "./pages/ReservasPage";
+//import RelatorioPage from "./pages/RelatorioPage";
 
 const { Header, Content } = Layout;
 
@@ -20,8 +20,6 @@ export default function App() {
           <Route path="/" element={<Navigate to="/pacotes" replace />} />
           <Route path="/clientes" element={<ClientesPage />} />
           <Route path="/pacotes" element={<PacotesPage />} />
-          <Route path="/reservas" element={<ReservasPage />} />
-          <Route path="/relatorio" element={<RelatorioPage />} />
         </Routes>
       </Content>
     </Layout>

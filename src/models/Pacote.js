@@ -1,5 +1,5 @@
 export class Pacote {
-  constructor({ id = null, destino = "", preco = 0, dataIda = null, dataVolta = null } = {}) {
+  constructor(id, destino, preco, dataIda, dataVolta) {
     this.id = id;
     this.destino = destino;
     this.preco = preco;
