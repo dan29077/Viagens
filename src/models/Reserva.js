@@ -1,9 +1,10 @@
-export default class Reserva {
-    constructor({ id = null, clienteId = '', pacoteId = '', dataReserva = '', valorPago = 0 } = {}) {
-    this.id = id || String(Date.now())
-    this.clienteId = clienteId
-    this.pacoteId = pacoteId
-    this.dataReserva = dataReserva
-    this.valorPago = valorPago
+export class Reserva {
+    constructor({ id = null, clienteId = null, pacoteId = null, dataReserva = null, valorPago = 0 } = {}) {
+      this.id = id;
+      this.clienteId = clienteId;
+      this.pacoteId = pacoteId;
+      this.dataReserva = dataReserva;
+      this.valorPago = valorPago;
     }
-    }
+  }
+  

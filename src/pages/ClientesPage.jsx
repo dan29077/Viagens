@@ -1,63 +1,139 @@
-import React from 'react'
-import { Table, Button, Space, Popconfirm, message } from 'antd'
-import ClienteDAO from '../daos/ClienteDAO'
-import Cliente from '../models/Cliente'
-import FormCliente from '../components/FormCliente'
-
+import React, { useEffect, useState } from "react";
+import { Table, Button, Modal, Form, Input, message, Space, Spin } from "antd";
+import ClienteDAO from "../daos/ClienteDAO";
 
 export default function ClientesPage() {
-const [clientes, setClientes] = React.useState([])
-const [loading, setLoading] = React.useState(false)
-const [openForm, setOpenForm] = React.useState(false)
-const [editing, setEditing] = React.useState(null)
+  const [list, setList] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [form] = Form.useForm();
 
+  const load = () => {
+    setLoading(true);
+    try {
+      setList(ClienteDAO.getAll());
+    } finally {
+      setLoading(false);
+    }
+  };
 
-const load = async () => { setLoading(true); setClientes(await ClienteDAO.findAll()); setLoading(false) }
-React.useEffect(() => { load() }, [])
+  useEffect(() => {
+    load();
+  }, []);
 
+  function openCreate() {
+    setEditing(null);
+    form.resetFields();
+    setModalVisible(true);
+  }
 
-const handleSave = async (values) => {
-try {
-if (editing) {
-await ClienteDAO.update(editing.id, values)
-message.success('Cliente atualizado')
-} else {
-const c = new Cliente(values)
-await ClienteDAO.save(c)
-message.success('Cliente criado')
-}
-setOpenForm(false); setEditing(null); load()
-} catch (e) { message.error('Erro ao salvar') }
-}
+  function openEdit(record) {
+    setEditing(record);
+    form.setFieldsValue({
+      nome: record.nome,
+      email: record.email,
+      telefone: record.telefone
+    });
+    setModalVisible(true);
+  }
 
+  async function onFinish(values) {
+    try {
+      if (editing) {
+        ClienteDAO.update(editing.id, values);
+        message.success("Cliente atualizado com sucesso");
+      } else {
+        ClienteDAO.create(values);
+        message.success("Cliente cadastrado");
+      }
+      setModalVisible(false);
+      load();
+    } catch (err) {
+      message.error("Erro ao salvar cliente");
+    }
+  }
 
-const handleDelete = async (id) => { await ClienteDAO.delete(id); message.success('Cliente removido'); load() }
+  function doDelete(id) {
+    Modal.confirm({
+      title: "Confirma exclusão?",
+      onOk: () => {
+        ClienteDAO.delete(id);
+        load();
+        message.success("Excluído");
+      }
+    });
+  }
 
+  const columns = [
+    { title: "Nome", dataIndex: "nome" },
+    { title: "Email", dataIndex: "email" },
+    { title: "Telefone", dataIndex: "telefone" },
+    {
+      title: "Ações",
+      render: (_, record) => (
+        <Space>
+          <Button onClick={() => openEdit(record)}>Editar</Button>
+          <Button danger onClick={() => doDelete(record.id)}>Excluir</Button>
+        </Space>
+      )
+    }
+  ];
 
-const columns = [
-{ title: 'Nome', dataIndex: 'nome' },
-{ title: 'Email', dataIndex: 'email' },
-{ title: 'Telefone', dataIndex: 'telefone' },
-{ title: 'Ações', key: 'acoes', render: (_, record) => (
-<Space>
-<Button onClick={() => { setEditing(record); setOpenForm(true) }}>Editar</Button>
-<Popconfirm title="Confirmar?" onConfirm={() => handleDelete(record.id)}>
-<Button danger>Excluir</Button>
-</Popconfirm>
-</Space>
-) }
-]
+  return (
+    <div>
+      <Space style={{ marginBottom: 16 }}>
+        <Button type="primary" onClick={openCreate}>
+          Novo Cliente
+        </Button>
+      </Space>
 
+      <Spin spinning={loading}>
+        <Table rowKey="id" dataSource={list} columns={columns} />
+      </Spin>
 
-return (
-<div>
-<Space style={{ marginBottom: 16 }}>
-<Button type="primary" onClick={() => setOpenForm(true)}>Novo Cliente</Button>
-</Space>
-<Table rowKey="id" dataSource={clientes} columns={columns} loading={loading} />
+      <Modal
+        open={modalVisible}
+        onCancel={() => setModalVisible(false)}
+        footer={null}
+        title={editing ? "Editar Cliente" : "Novo Cliente"}
+      >
+        <Form layout="vertical" form={form} onFinish={onFinish}>
+          <Form.Item
+            name="nome"
+            label="Nome"
+            rules={[{ required: true, message: "Informe o nome" }]}
+          >
+            <Input />
+          </Form.Item>
 
+          <Form.Item
+            name="email"
+            label="E-mail"
+            rules={[
+              { required: true, message: "Informe o e-mail" },
+              { type: "email", message: "Email inválido" }
+            ]}
+          >
+            <Input />
+          </Form.Item>
 
-<FormCliente open={openForm} onCancel={() => { setOpenForm(false); setEditing(null) }} onSave={handleSave} initial={editing} />
-</div>
-)
+          <Form.Item
+            name="telefone"
+            label="Telefone"
+            rules={[{ required: true, message: "Informe o telefone" }]}
+          >
+            <Input />
+          </Form.Item>
+
+          <Form.Item>
+            <Space>
+              <Button type="primary" htmlType="submit">Salvar</Button>
+              <Button onClick={() => setModalVisible(false)}>Cancelar</Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
+    </div>
+  );
 }
